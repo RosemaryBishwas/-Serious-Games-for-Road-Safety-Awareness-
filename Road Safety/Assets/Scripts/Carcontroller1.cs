@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class CarController : MonoBehaviour
+public class Carcontroller : MonoBehaviour
 {
     public float speed = 5f;
 
