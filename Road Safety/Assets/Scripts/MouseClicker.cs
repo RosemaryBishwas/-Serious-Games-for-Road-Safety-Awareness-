@@ -170,6 +170,10 @@ public class MouseClicker : MonoBehaviour
         missionCompleted = true;
         gameStarted = false;
         DrawSuccessRay();
+        Vector3 successPosition = giftShopDestination != null
+            ? giftShopDestination.position
+            : transform.position;
+        RoadSafetyAudio.PlaySuccess(successPosition);
         Time.timeScale = 0f;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;

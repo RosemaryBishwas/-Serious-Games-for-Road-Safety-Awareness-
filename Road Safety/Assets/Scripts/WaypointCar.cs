@@ -24,10 +24,21 @@ public class WaypointCar : MonoBehaviour
 
     private bool shouldStop = false;
     private bool hasHitPlayer = false;
+    private VehicleSoundController vehicleSounds;
+
+    void Awake()
+    {
+        vehicleSounds = GetComponent<VehicleSoundController>();
+        if (vehicleSounds == null)
+        {
+            vehicleSounds = gameObject.AddComponent<VehicleSoundController>();
+        }
+    }
 
     void Update()
     {
         CheckTrafficLight();
+        vehicleSounds.UpdateVehicleSound(speed, !shouldStop && speed > minimumAccidentSpeed);
 
         if (!shouldStop)
         {
@@ -73,7 +84,7 @@ public class WaypointCar : MonoBehaviour
 
         if (distance < stopDistance)
         {
-            if (trafficLight.currentState == TrafficLightController.LightState.Red ||
+            if (trafficLight.currentState == TrafficLightController.LightState.Green ||
                 trafficLight.currentState == TrafficLightController.LightState.Yellow)
             {
                 shouldStop = true;
@@ -120,6 +131,7 @@ public class WaypointCar : MonoBehaviour
         Debug.Log("Accident occurred with player!");
 
         hasHitPlayer = true;
+        vehicleSounds.PlayCollisionSound();
         speed = 0f;
 
         PlayerAccident playerAccident = playerObject.GetComponent<PlayerAccident>();

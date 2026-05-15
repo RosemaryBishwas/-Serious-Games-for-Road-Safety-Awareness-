@@ -120,6 +120,10 @@ public class GiftShopDestination : MonoBehaviour
             missionController.giftShopDestination = transform;
             missionController.CompleteMission();
         }
+        else
+        {
+            RoadSafetyAudio.PlaySuccess(transform.position);
+        }
 
         DrawSuccessRay();
         Time.timeScale = 0f;
