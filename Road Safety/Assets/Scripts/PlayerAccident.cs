@@ -12,6 +12,7 @@ public class PlayerAccident : MonoBehaviour
     public float surfaceOffset = 0.03f;
     public float surfaceCheckDistance = 5f;
     public LayerMask surfaceLayers = ~0;
+    public bool forceFinalLyingPose = true;
 
     [Header("Optional")]
     public Behaviour[] extraComponentsToDisable;
@@ -30,18 +31,26 @@ public class PlayerAccident : MonoBehaviour
     private bool hasAccidentHappened;
     private bool isLyingOnSurface;
     private bool showRestartOption;
+
     private CharacterController characterController;
     private Animator animator;
     private Rigidbody[] rigidbodies;
+
     private Vector3 finalLyingPosition;
     private Quaternion finalLyingRotation;
     private Quaternion cameraTargetFinalRotation;
+
+    public bool HasAccidentHappened
+    {
+        get { return hasAccidentHappened; }
+    }
 
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();
         animator = GetComponentInChildren<Animator>();
         rigidbodies = GetComponentsInChildren<Rigidbody>();
+
         cameraTargetToKeepStill = FindCameraTarget();
     }
 
@@ -73,7 +82,9 @@ public class PlayerAccident : MonoBehaviour
             return;
         }
 
+        forceFinalLyingPose = true;
         hasAccidentHappened = true;
+
         StartCoroutine(Fall(hitDirection));
     }
 
@@ -81,53 +92,78 @@ public class PlayerAccident : MonoBehaviour
     {
         DisablePlayerControl();
 
-        Vector3 flatHitDirection = Vector3.ProjectOnPlane(hitDirection, Vector3.up).normalized;
+        Vector3 flatHitDirection =
+            Vector3.ProjectOnPlane(hitDirection, Vector3.up).normalized;
+
         if (flatHitDirection.sqrMagnitude < 0.01f)
         {
             flatHitDirection = -transform.forward;
         }
 
-        if (animator != null && HasAnimatorParameter(accidentAnimationTrigger, AnimatorControllerParameterType.Trigger))
+        if (animator != null &&
+            HasAnimatorParameter(
+                accidentAnimationTrigger,
+                AnimatorControllerParameterType.Trigger))
         {
             animator.SetTrigger(accidentAnimationTrigger);
         }
 
         Quaternion startRotation = transform.rotation;
         Vector3 startPosition = transform.position;
-        Quaternion cameraTargetStartRotation = cameraTargetToKeepStill != null
+
+        Quaternion cameraTargetStartRotation =
+            cameraTargetToKeepStill != null
             ? cameraTargetToKeepStill.rotation
             : Quaternion.identity;
 
-        Vector3 fallAxis = Vector3.Cross(Vector3.up, flatHitDirection).normalized;
-        Quaternion targetRotation = Quaternion.AngleAxis(fallAngle, fallAxis) * startRotation;
-        Vector3 targetPosition = startPosition + flatHitDirection * knockbackDistance + Vector3.up * liftAmount;
+        Quaternion targetRotation =
+            GetLyingRotation(startRotation, flatHitDirection);
+
+        Vector3 targetPosition =
+            startPosition +
+            flatHitDirection * knockbackDistance +
+            Vector3.up * liftAmount;
 
         float elapsed = 0f;
+
         while (elapsed < fallDuration)
         {
             float t = Mathf.SmoothStep(0f, 1f, elapsed / fallDuration);
-            transform.rotation = Quaternion.Slerp(startRotation, targetRotation, t);
-            transform.position = Vector3.Lerp(startPosition, targetPosition, t);
+
+            transform.rotation =
+                Quaternion.Slerp(startRotation, targetRotation, t);
+
+            transform.position =
+                Vector3.Lerp(startPosition, targetPosition, t);
+
             KeepOnSurface(false);
             KeepCameraTargetRotation(cameraTargetStartRotation);
 
             elapsed += Time.deltaTime;
+
             yield return null;
         }
 
         transform.rotation = targetRotation;
         transform.position = targetPosition;
+
         KeepOnSurface(true);
+
         finalLyingPosition = transform.position;
         finalLyingRotation = transform.rotation;
+
         cameraTargetFinalRotation = cameraTargetStartRotation;
+
         FreezePhysics();
+
         isLyingOnSurface = true;
+
         KeepCameraTargetRotation(cameraTargetFinalRotation);
 
         if (showMissionFailedScreen)
         {
-            yield return new WaitForSeconds(missionFailedDelay);
+            yield return new WaitForSecondsRealtime(missionFailedDelay);
+
             ShowRestartOption();
         }
     }
@@ -142,6 +178,7 @@ public class PlayerAccident : MonoBehaviour
         FreezePhysics();
 
         MonoBehaviour[] components = GetComponents<MonoBehaviour>();
+
         foreach (MonoBehaviour component in components)
         {
             if (component != this)
@@ -164,7 +201,9 @@ public class PlayerAccident : MonoBehaviour
         }
     }
 
-    private bool HasAnimatorParameter(string parameterName, AnimatorControllerParameterType parameterType)
+    private bool HasAnimatorParameter(
+        string parameterName,
+        AnimatorControllerParameterType parameterType)
     {
         if (animator == null || string.IsNullOrEmpty(parameterName))
         {
@@ -173,7 +212,8 @@ public class PlayerAccident : MonoBehaviour
 
         foreach (AnimatorControllerParameter parameter in animator.parameters)
         {
-            if (parameter.type == parameterType && parameter.name == parameterName)
+            if (parameter.type == parameterType &&
+                parameter.name == parameterName)
             {
                 return true;
             }
@@ -185,12 +225,14 @@ public class PlayerAccident : MonoBehaviour
     private Transform FindCameraTarget()
     {
         Transform target = transform.Find("PlayerCameraRoot");
+
         if (target != null)
         {
             return target;
         }
 
         target = transform.Find("CinemachineCameraTarget");
+
         if (target != null)
         {
             return target;
@@ -199,9 +241,39 @@ public class PlayerAccident : MonoBehaviour
         return null;
     }
 
+    private Quaternion GetLyingRotation(
+        Quaternion startRotation,
+        Vector3 flatHitDirection)
+    {
+        if (!forceFinalLyingPose)
+        {
+            Vector3 fallAxis =
+                Vector3.Cross(Vector3.up, flatHitDirection).normalized;
+
+            return Quaternion.AngleAxis(fallAngle, fallAxis) * startRotation;
+        }
+
+        Vector3 bodyUpWhenLying = -flatHitDirection;
+
+        if (bodyUpWhenLying.sqrMagnitude < 0.01f)
+        {
+            bodyUpWhenLying = -transform.forward;
+        }
+
+        bodyUpWhenLying =
+            Vector3.ProjectOnPlane(bodyUpWhenLying, Vector3.up).normalized;
+
+        Vector3 currentBodyUp = startRotation * Vector3.up;
+
+        return Quaternion.FromToRotation(
+            currentBodyUp,
+            bodyUpWhenLying) * startRotation;
+    }
+
     private void KeepCameraTargetRotation(Quaternion rotationToKeep)
     {
-        if (!keepCameraAngleAfterAccident || cameraTargetToKeepStill == null)
+        if (!keepCameraAngleAfterAccident ||
+            cameraTargetToKeepStill == null)
         {
             return;
         }
@@ -217,7 +289,10 @@ public class PlayerAccident : MonoBehaviour
         }
 
         float lowestPoint = GetLowestVisiblePoint();
-        float surfaceCorrection = surfaceHeight + surfaceOffset - lowestPoint;
+
+        float surfaceCorrection =
+            surfaceHeight + surfaceOffset - lowestPoint;
+
         if (surfaceCorrection > 0f || allowLowering)
         {
             transform.position += Vector3.up * surfaceCorrection;
@@ -226,18 +301,31 @@ public class PlayerAccident : MonoBehaviour
 
     private bool TryGetSurfaceHeight(out float surfaceHeight)
     {
-        Vector3 rayStart = transform.position + Vector3.up * surfaceCheckDistance;
-        RaycastHit[] hits = Physics.RaycastAll(rayStart, Vector3.down, surfaceCheckDistance * 2f, surfaceLayers, QueryTriggerInteraction.Ignore);
+        Vector3 rayStart =
+            transform.position + Vector3.up * surfaceCheckDistance;
+
+        RaycastHit[] hits =
+            Physics.RaycastAll(
+                rayStart,
+                Vector3.down,
+                surfaceCheckDistance * 2f,
+                surfaceLayers,
+                QueryTriggerInteraction.Ignore);
+
         if (hits.Length == 0)
         {
             surfaceHeight = transform.position.y;
             return false;
         }
 
-        System.Array.Sort(hits, (first, second) => first.distance.CompareTo(second.distance));
+        System.Array.Sort(
+            hits,
+            (first, second) => first.distance.CompareTo(second.distance));
+
         foreach (RaycastHit hit in hits)
         {
-            if (hit.transform == transform || hit.transform.IsChildOf(transform))
+            if (hit.transform == transform ||
+                hit.transform.IsChildOf(transform))
             {
                 continue;
             }
@@ -253,15 +341,18 @@ public class PlayerAccident : MonoBehaviour
     private float GetLowestVisiblePoint()
     {
         Renderer[] renderers = GetComponentsInChildren<Renderer>();
+
         if (renderers.Length == 0)
         {
             return transform.position.y;
         }
 
         float lowestPoint = float.MaxValue;
+
         foreach (Renderer childRenderer in renderers)
         {
-            lowestPoint = Mathf.Min(lowestPoint, childRenderer.bounds.min.y);
+            lowestPoint =
+                Mathf.Min(lowestPoint, childRenderer.bounds.min.y);
         }
 
         return lowestPoint;
@@ -283,6 +374,7 @@ public class PlayerAccident : MonoBehaviour
 
             body.linearVelocity = Vector3.zero;
             body.angularVelocity = Vector3.zero;
+
             body.useGravity = false;
             body.isKinematic = true;
         }
@@ -291,15 +383,26 @@ public class PlayerAccident : MonoBehaviour
     private void ShowRestartOption()
     {
         showRestartOption = true;
+
         Time.timeScale = 0f;
+
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
 
     private void RestartLevel()
     {
+        StartCoroutine(RestartScene());
+    }
+
+    private IEnumerator RestartScene()
+    {
         Time.timeScale = 1f;
+
+        yield return null;
+
         Scene activeScene = SceneManager.GetActiveScene();
+
         SceneManager.LoadScene(activeScene.buildIndex);
     }
 
@@ -327,14 +430,20 @@ public class PlayerAccident : MonoBehaviour
             fontStyle = FontStyle.Bold
         };
 
-        Rect screenRect = new Rect(0f, 0f, Screen.width, Screen.height);
+        Rect screenRect =
+            new Rect(0f, 0f, Screen.width, Screen.height);
+
         Color previousColor = GUI.color;
+
         GUI.color = new Color(0f, 0f, 0f, 0.65f);
+
         GUI.DrawTexture(screenRect, Texture2D.whiteTexture);
+
         GUI.color = previousColor;
 
         float panelWidth = Mathf.Min(460f, Screen.width - 40f);
         float panelHeight = 260f;
+
         Rect panelRect = new Rect(
             (Screen.width - panelWidth) * 0.5f,
             (Screen.height - panelHeight) * 0.5f,
@@ -342,21 +451,40 @@ public class PlayerAccident : MonoBehaviour
             panelHeight);
 
         GUILayout.BeginArea(panelRect);
+
         GUILayout.FlexibleSpace();
-        GUILayout.Label(diedMessage, titleStyle, GUILayout.Height(60f));
-        GUILayout.Label(missionFailedMessage, subtitleStyle, GUILayout.Height(45f));
+
+        GUILayout.Label(
+            diedMessage,
+            titleStyle,
+            GUILayout.Height(60f));
+
+        GUILayout.Label(
+            missionFailedMessage,
+            subtitleStyle,
+            GUILayout.Height(45f));
+
         GUILayout.Space(24f);
 
         GUILayout.BeginHorizontal();
+
         GUILayout.FlexibleSpace();
-        if (GUILayout.Button(restartButtonText, buttonStyle, GUILayout.Width(180f), GUILayout.Height(56f)))
+
+        if (GUILayout.Button(
+            restartButtonText,
+            buttonStyle,
+            GUILayout.Width(180f),
+            GUILayout.Height(56f)))
         {
             RestartLevel();
         }
+
         GUILayout.FlexibleSpace();
+
         GUILayout.EndHorizontal();
 
         GUILayout.FlexibleSpace();
+
         GUILayout.EndArea();
     }
 }

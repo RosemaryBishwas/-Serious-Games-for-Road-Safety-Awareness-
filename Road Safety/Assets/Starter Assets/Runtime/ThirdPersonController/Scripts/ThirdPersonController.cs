@@ -62,6 +62,14 @@ namespace StarterAssets
         [Tooltip("What layers the character uses as ground")]
         public LayerMask GroundLayers;
 
+        [Tooltip("Also treat any solid collider below the character as ground. Useful when sidewalks/grass use different layers.")]
+        public bool UseAnySolidColliderAsGround = true;
+
+        [Tooltip("Keep the character from dropping through decorative ground/grass areas that are missing the configured ground layer.")]
+        public bool PreventFallingThroughGround = true;
+
+        public float MaxGroundDropBeforeCorrection = 0.25f;
+
         [Header("Cinemachine")]
         [Tooltip("The follow target set in the Cinemachine Virtual Camera that the camera will follow")]
         public GameObject CinemachineCameraTarget;
@@ -108,6 +116,7 @@ namespace StarterAssets
         private CharacterController _controller;
         private StarterAssetsInputs _input;
         private GameObject _mainCamera;
+        private float _lastSafeGroundY;
 
         private const float _threshold = 0.01f;
 
@@ -153,6 +162,7 @@ namespace StarterAssets
             // reset our timeouts on start
             _jumpTimeoutDelta = JumpTimeout;
             _fallTimeoutDelta = FallTimeout;
+            _lastSafeGroundY = transform.position.y;
         }
 
         private void Update()
@@ -185,6 +195,12 @@ namespace StarterAssets
                 transform.position.z);
             Grounded = Physics.CheckSphere(spherePosition, GroundedRadius, GroundLayers,
                 QueryTriggerInteraction.Ignore);
+
+            if (!Grounded && UseAnySolidColliderAsGround)
+            {
+                Grounded = _controller.isGrounded || Physics.CheckSphere(spherePosition, GroundedRadius, ~0,
+                    QueryTriggerInteraction.Ignore);
+            }
 
             // update animator if using character
             if (_hasAnimator)
@@ -273,6 +289,7 @@ namespace StarterAssets
             // move the player
             _controller.Move(targetDirection.normalized * (_speed * Time.deltaTime) +
                              new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
+            PreventUnexpectedGroundFall();
 
             // update animator if using character
             if (_hasAnimator)
@@ -286,6 +303,8 @@ namespace StarterAssets
         {
             if (Grounded)
             {
+                _lastSafeGroundY = transform.position.y;
+
                 // reset the fall timeout timer
                 _fallTimeoutDelta = FallTimeout;
 
@@ -356,6 +375,28 @@ namespace StarterAssets
             if (lfAngle < -360f) lfAngle += 360f;
             if (lfAngle > 360f) lfAngle -= 360f;
             return Mathf.Clamp(lfAngle, lfMin, lfMax);
+        }
+
+        private void PreventUnexpectedGroundFall()
+        {
+            if (!PreventFallingThroughGround || _input.jump)
+            {
+                return;
+            }
+
+            if (transform.position.y >= _lastSafeGroundY - MaxGroundDropBeforeCorrection)
+            {
+                return;
+            }
+
+            Vector3 correctedPosition = transform.position;
+            correctedPosition.y = _lastSafeGroundY;
+            _controller.enabled = false;
+            transform.position = correctedPosition;
+            _controller.enabled = true;
+
+            _verticalVelocity = -2f;
+            Grounded = true;
         }
 
         private void OnDrawGizmosSelected()

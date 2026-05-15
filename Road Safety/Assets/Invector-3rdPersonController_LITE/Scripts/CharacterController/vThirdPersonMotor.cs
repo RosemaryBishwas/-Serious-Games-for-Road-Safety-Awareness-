@@ -49,6 +49,11 @@ namespace Invector.vCharacterController
         [Header("- Ground")]
         [Tooltip("Layers that the character can walk on")]
         public LayerMask groundLayer = 1 << 0;
+        [Tooltip("Also treat any solid collider as ground when sidewalks/grass use a different layer.")]
+        public bool useAnySolidColliderAsGround = true;
+        [Tooltip("Keep the character from dropping through decorative ground/grass areas that are missing the configured ground layer.")]
+        public bool preventFallingThroughGround = true;
+        public float maxGroundDropBeforeCorrection = 0.25f;
         [Tooltip("Distance to became not grounded")]
         public float groundMinDistance = 0.25f;
         public float groundMaxDistance = 0.5f;
@@ -102,6 +107,7 @@ namespace Invector.vCharacterController
         internal Vector3 colliderCenter;                    // storage the center of the capsule collider info                
         internal Vector3 inputSmooth;                       // generate smooth input based on the inputSmooth value       
         internal Vector3 moveDirection;                     // used to know the direction you're moving 
+        private float lastSafeGroundY;
 
         #endregion
 
@@ -143,6 +149,7 @@ namespace Invector.vCharacterController
             colliderHeight = GetComponent<CapsuleCollider>().height;
 
             isGrounded = true;
+            lastSafeGroundY = transform.position.y;
         }
 
         public virtual void UpdateMotor()
@@ -296,6 +303,7 @@ namespace Invector.vCharacterController
             if (groundDistance <= groundMinDistance)
             {
                 isGrounded = true;
+                lastSafeGroundY = transform.position.y;
                 if (!isJumping && groundDistance > 0.05f)
                     _rigidbody.AddForce(transform.up * (extraGravity * 2 * Time.deltaTime), ForceMode.VelocityChange);
 
@@ -313,6 +321,7 @@ namespace Invector.vCharacterController
                     if (!isJumping)
                     {
                         _rigidbody.AddForce(transform.up * extraGravity * Time.deltaTime, ForceMode.VelocityChange);
+                        PreventUnexpectedGroundFall();
                     }
                 }
                 else if (!isJumping)
@@ -347,6 +356,8 @@ namespace Invector.vCharacterController
                 // raycast for check the ground distance
                 if (Physics.Raycast(ray2, out groundHit, (colliderHeight / 2) + dist, groundLayer) && !groundHit.collider.isTrigger)
                     dist = transform.position.y - groundHit.point.y;
+                else if (useAnySolidColliderAsGround && Physics.Raycast(ray2, out groundHit, (colliderHeight / 2) + dist, ~0, QueryTriggerInteraction.Ignore) && !groundHit.collider.isTrigger && !groundHit.transform.IsChildOf(transform))
+                    dist = transform.position.y - groundHit.point.y;
                 // sphere cast around the base of the capsule to check the ground distance
                 if (dist >= groundMinDistance)
                 {
@@ -358,9 +369,35 @@ namespace Invector.vCharacterController
                         float newDist = transform.position.y - groundHit.point.y;
                         if (dist > newDist) dist = newDist;
                     }
+                    else if (useAnySolidColliderAsGround && Physics.SphereCast(ray, radius, out groundHit, _capsuleCollider.radius + groundMaxDistance, ~0, QueryTriggerInteraction.Ignore) && !groundHit.collider.isTrigger && !groundHit.transform.IsChildOf(transform))
+                    {
+                        Physics.Linecast(groundHit.point + (Vector3.up * 0.1f), groundHit.point + Vector3.down * 0.15f, out groundHit, ~0);
+                        float newDist = transform.position.y - groundHit.point.y;
+                        if (dist > newDist) dist = newDist;
+                    }
                 }
                 groundDistance = (float)System.Math.Round(dist, 2);
             }
+        }
+
+        protected virtual void PreventUnexpectedGroundFall()
+        {
+            if (!preventFallingThroughGround || isJumping || transform.position.y >= lastSafeGroundY - maxGroundDropBeforeCorrection)
+            {
+                return;
+            }
+
+            Vector3 correctedPosition = _rigidbody.position;
+            correctedPosition.y = lastSafeGroundY;
+            _rigidbody.position = correctedPosition;
+            transform.position = correctedPosition;
+
+            Vector3 velocity = _rigidbody.linearVelocity;
+            velocity.y = 0f;
+            _rigidbody.linearVelocity = velocity;
+
+            isGrounded = true;
+            groundDistance = 0f;
         }
 
         public virtual float GroundAngle()

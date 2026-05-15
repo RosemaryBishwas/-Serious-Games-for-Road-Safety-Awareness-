@@ -19,6 +19,8 @@ public class WaypointCar : MonoBehaviour
     public Vector3 playerHitBoxCenter = new Vector3(0f, 0.9f, 1.6f);
     public Vector3 playerHitBoxHalfExtents = new Vector3(0.9f, 0.8f, 0.7f);
     public LayerMask playerHitLayers = ~0;
+    public bool onlyHitPlayerInFront = true;
+    public bool useAutomaticPlayerHitScan = true;
 
     private bool shouldStop = false;
     private bool hasHitPlayer = false;
@@ -89,15 +91,15 @@ public class WaypointCar : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
-        HandlePlayerHit(collision.gameObject);
+        HandlePlayerHit(collision.gameObject, false);
     }
 
     void OnTriggerEnter(Collider other)
     {
-        HandlePlayerHit(other.gameObject);
+        HandlePlayerHit(other.gameObject, false);
     }
 
-    void HandlePlayerHit(GameObject hitObject)
+    void HandlePlayerHit(GameObject hitObject, bool requireAccidentZone)
     {
         if (hasHitPlayer || speed <= minimumAccidentSpeed)
         {
@@ -106,6 +108,11 @@ public class WaypointCar : MonoBehaviour
 
         GameObject playerObject = GetPlayerObject(hitObject);
         if (playerObject == null)
+        {
+            return;
+        }
+
+        if (requireAccidentZone && !IsPlayerInAccidentZone(playerObject.transform.position))
         {
             return;
         }
@@ -135,6 +142,24 @@ public class WaypointCar : MonoBehaviour
         return root.CompareTag("Player") ? root.gameObject : null;
     }
 
+    bool IsPlayerInAccidentZone(Vector3 playerPosition)
+    {
+        if (!onlyHitPlayerInFront)
+        {
+            return true;
+        }
+
+        Vector3 localPlayerPosition = transform.InverseTransformPoint(playerPosition);
+        Vector3 safeHalfExtents = GetSafeHitBoxHalfExtents();
+        float frontStart = playerHitBoxCenter.z - safeHalfExtents.z;
+        float frontEnd = playerHitBoxCenter.z + safeHalfExtents.z;
+
+        return localPlayerPosition.z >= frontStart &&
+               localPlayerPosition.z <= frontEnd &&
+               Mathf.Abs(localPlayerPosition.x - playerHitBoxCenter.x) <= safeHalfExtents.x &&
+               Mathf.Abs(localPlayerPosition.y - playerHitBoxCenter.y) <= safeHalfExtents.y;
+    }
+
     void CheckForPlayerHit()
     {
         if (speed <= minimumAccidentSpeed || hasHitPlayer)
@@ -143,14 +168,22 @@ public class WaypointCar : MonoBehaviour
         }
 
         Vector3 hitBoxCenter = transform.TransformPoint(playerHitBoxCenter);
-        Collider[] hits = Physics.OverlapBox(hitBoxCenter, playerHitBoxHalfExtents, transform.rotation, playerHitLayers, QueryTriggerInteraction.Collide);
+        Collider[] hits = Physics.OverlapBox(hitBoxCenter, GetSafeHitBoxHalfExtents(), transform.rotation, playerHitLayers, QueryTriggerInteraction.Collide);
         foreach (Collider hit in hits)
         {
-            HandlePlayerHit(hit.gameObject);
+            HandlePlayerHit(hit.gameObject, true);
             if (hasHitPlayer)
             {
                 return;
             }
         }
+    }
+
+    Vector3 GetSafeHitBoxHalfExtents()
+    {
+        return new Vector3(
+            Mathf.Min(playerHitBoxHalfExtents.x, 0.6f),
+            Mathf.Min(playerHitBoxHalfExtents.y, 0.9f),
+            Mathf.Min(playerHitBoxHalfExtents.z, 0.8f));
     }
 }
