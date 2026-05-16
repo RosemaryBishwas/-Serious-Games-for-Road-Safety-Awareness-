@@ -146,9 +146,11 @@ namespace StarterAssets
 
         private void Start()
         {
-            _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
+            _cinemachineTargetYaw = transform.eulerAngles.y;
+            _cinemachineTargetPitch = 0f;
 
-            _hasAnimator = TryGetComponent(out _animator);
+            _animator = GetActiveAnimator();
+            _hasAnimator = _animator != null;
             _controller = GetComponent<CharacterController>();
             _input = GetComponent<StarterAssetsInputs>();
 #if ENABLE_INPUT_SYSTEM 
@@ -163,15 +165,37 @@ namespace StarterAssets
             _jumpTimeoutDelta = JumpTimeout;
             _fallTimeoutDelta = FallTimeout;
             _lastSafeGroundY = transform.position.y;
+
+            CameraRotation();
         }
 
         private void Update()
         {
-            _hasAnimator = TryGetComponent(out _animator);
+            if (_animator == null || !_animator.isActiveAndEnabled)
+            {
+                _animator = GetActiveAnimator();
+            }
+
+            _hasAnimator = _animator != null;
 
             JumpAndGravity();
             GroundedCheck();
             Move();
+        }
+
+        private Animator GetActiveAnimator()
+        {
+            Animator[] animators = GetComponentsInChildren<Animator>();
+
+            foreach (Animator childAnimator in animators)
+            {
+                if (childAnimator != null && childAnimator.isActiveAndEnabled)
+                {
+                    return childAnimator;
+                }
+            }
+
+            return null;
         }
 
         private void LateUpdate()
@@ -326,6 +350,7 @@ namespace StarterAssets
                 {
                     // the square root of H * -2 * G = how much velocity needed to reach desired height
                     _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * Gravity);
+                    _input.jump = false;
 
                     // update animator if using character
                     if (_hasAnimator)

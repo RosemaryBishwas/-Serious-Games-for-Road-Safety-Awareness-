@@ -315,7 +315,7 @@ MonoBehaviour:
   showInstructionUI: 1
   showInTopRight: 1
   redInstruction: STOP
-  yellowInstruction: BE READY
+  yellowInstruction: WAIT
   greenInstruction: MOVE
   showWorldLightLabel: 1
   worldLabelOffset: {x: 0, y: 4.6, z: 0}
@@ -3277,7 +3277,7 @@ MonoBehaviour:
   showInstructionUI: 1
   showInTopRight: 1
   redInstruction: STOP
-  yellowInstruction: BE READY
+  yellowInstruction: WAIT
   greenInstruction: MOVE
   showWorldLightLabel: 1
   worldLabelOffset: {x: 0, y: 4.6, z: 0}
@@ -4726,7 +4726,6 @@ GameObject:
   - component: {fileID: 368618022}
   - component: {fileID: 368618025}
   - component: {fileID: 368618024}
-  - component: {fileID: 368618023}
   m_Layer: 0
   m_Name: YellowLight (4)
   m_TagString: Untagged
@@ -4779,39 +4778,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &368618023
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 368618021}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0c34784e34df1d9499260a4dd81757c8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  redLight: {fileID: 0}
-  yellowLight: {fileID: 0}
-  greenLight: {fileID: 0}
-  redOn: {fileID: 0}
-  redOff: {fileID: 0}
-  yellowOn: {fileID: 0}
-  yellowOff: {fileID: 0}
-  greenOn: {fileID: 0}
-  greenOff: {fileID: 0}
-  redTime: 15
-  greenTime: 15
-  yellowTime: 5
-  showInstructionUI: 1
-  showInTopRight: 1
-  redInstruction: STOP
-  yellowInstruction: BE READY
-  greenInstruction: MOVE
-  showWorldLightLabel: 1
-  worldLabelOffset: {x: 0, y: 4.6, z: 0}
-  worldLabelSize: 0.28
-  currentState: 0
 --- !u!114 &368618024
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4839,7 +4805,7 @@ MonoBehaviour:
   showInstructionUI: 1
   showInTopRight: 1
   redInstruction: STOP
-  yellowInstruction: BE READY
+  yellowInstruction: WAIT
   greenInstruction: MOVE
   showWorldLightLabel: 1
   worldLabelOffset: {x: 0, y: 4.6, z: 0}
@@ -4936,6 +4902,18 @@ PrefabInstance:
       value: 1.6788
       objectReference: {fileID: 0}
     - target: {fileID: 974238578668270715, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
+      propertyPath: MoveSpeed
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 974238578668270715, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
+      propertyPath: SprintSpeed
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 974238578668270715, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
+      propertyPath: RotationSmoothTime
+      value: 0.141
+      objectReference: {fileID: 0}
+    - target: {fileID: 974238578668270715, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
       propertyPath: GroundLayers.m_Bits
       value: 1
       objectReference: {fileID: 0}
@@ -4957,7 +4935,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2119775930974504096, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.3
+      value: 1.6
       objectReference: {fileID: 0}
     - target: {fileID: 2119775930974504096, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
       propertyPath: m_LocalPosition.z
@@ -4997,7 +4975,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3203261902030644824, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.3783501
+      value: 1.3783503
       objectReference: {fileID: 0}
     - target: {fileID: 3203261902030644824, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
       propertyPath: m_LocalPosition.z
@@ -5041,7 +5019,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8047161636021232021, guid: c708a3b79cd542b42bbfedb17e213bc1, type: 3}
       propertyPath: m_TagString
-      value: Player
+      value: Untagged
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
@@ -5496,7 +5474,7 @@ MonoBehaviour:
   showInstructionUI: 1
   showInTopRight: 1
   redInstruction: STOP
-  yellowInstruction: BE READY
+  yellowInstruction: WAIT
   greenInstruction: MOVE
   showWorldLightLabel: 1
   worldLabelOffset: {x: 0, y: 4.6, z: 0}
@@ -9699,7 +9677,7 @@ MonoBehaviour:
   showInstructionUI: 1
   showInTopRight: 1
   redInstruction: STOP
-  yellowInstruction: BE READY
+  yellowInstruction: WAIT
   greenInstruction: MOVE
   showWorldLightLabel: 1
   worldLabelOffset: {x: 0, y: 4.6, z: 0}
@@ -12845,7 +12823,7 @@ MonoBehaviour:
   showInstructionUI: 1
   showInTopRight: 1
   redInstruction: STOP
-  yellowInstruction: BE READY
+  yellowInstruction: WAIT
   greenInstruction: MOVE
   showWorldLightLabel: 1
   worldLabelOffset: {x: 0, y: 4.6, z: 0}
@@ -13056,7 +13034,7 @@ MonoBehaviour:
   showInstructionUI: 1
   showInTopRight: 1
   redInstruction: STOP
-  yellowInstruction: BE READY
+  yellowInstruction: WAIT
   greenInstruction: MOVE
   showWorldLightLabel: 1
   worldLabelOffset: {x: 0, y: 4.6, z: 0}
@@ -17747,7 +17725,7 @@ MonoBehaviour:
   showInstructionUI: 1
   showInTopRight: 1
   redInstruction: STOP
-  yellowInstruction: BE READY
+  yellowInstruction: WAIT
   greenInstruction: MOVE
   showWorldLightLabel: 1
   worldLabelOffset: {x: 0, y: 4.6, z: 0}
@@ -18957,7 +18935,7 @@ MonoBehaviour:
   showInstructionUI: 1
   showInTopRight: 1
   redInstruction: STOP
-  yellowInstruction: BE READY
+  yellowInstruction: WAIT
   greenInstruction: MOVE
   showWorldLightLabel: 1
   worldLabelOffset: {x: 0, y: 4.6, z: 0}
@@ -19055,7 +19033,7 @@ MonoBehaviour:
   showInstructionUI: 1
   showInTopRight: 1
   redInstruction: STOP
-  yellowInstruction: BE READY
+  yellowInstruction: WAIT
   greenInstruction: MOVE
   showWorldLightLabel: 1
   worldLabelOffset: {x: 0, y: 4.6, z: 0}
@@ -19759,7 +19737,7 @@ MonoBehaviour:
   showInstructionUI: 1
   showInTopRight: 1
   redInstruction: STOP
-  yellowInstruction: BE READY
+  yellowInstruction: WAIT
   greenInstruction: MOVE
   showWorldLightLabel: 1
   worldLabelOffset: {x: 0, y: 4.6, z: 0}
@@ -22824,7 +22802,7 @@ BoxCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 1
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
@@ -22850,8 +22828,8 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 0
+  m_UseGravity: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -25001,7 +24979,7 @@ MonoBehaviour:
   showInstructionUI: 1
   showInTopRight: 1
   redInstruction: STOP
-  yellowInstruction: BE READY
+  yellowInstruction: WAIT
   greenInstruction: MOVE
   showWorldLightLabel: 1
   worldLabelOffset: {x: 0, y: 4.6, z: 0}
@@ -25821,7 +25799,7 @@ MonoBehaviour:
   showInstructionUI: 1
   showInTopRight: 1
   redInstruction: STOP
-  yellowInstruction: BE READY
+  yellowInstruction: WAIT
   greenInstruction: MOVE
   showWorldLightLabel: 1
   worldLabelOffset: {x: 0, y: 4.6, z: 0}
@@ -26286,7 +26264,7 @@ MonoBehaviour:
   showInstructionUI: 1
   showInTopRight: 1
   redInstruction: STOP
-  yellowInstruction: BE READY
+  yellowInstruction: WAIT
   greenInstruction: MOVE
   showWorldLightLabel: 1
   worldLabelOffset: {x: 0, y: 4.6, z: 0}
@@ -27594,6 +27572,61 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 52e3c281ef0f0ea4985188d26644edcb, type: 3}
+--- !u!1 &2141000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2141000002}
+  - component: {fileID: 2141000003}
+  m_Layer: 0
+  m_Name: Road Safety Audio
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2141000002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2141000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2141000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2141000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9918fd7f85ae4d7883bccbdfe7bddce8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hornClip: {fileID: 0}
+  collisionClip: {fileID: 0}
+  successClip: {fileID: 0}
+  vehicleLoopClip: {fileID: 0}
+  backgroundMusicClip: {fileID: 0}
+  hornVolume: 0.9
+  collisionVolume: 1
+  successVolume: 0.9
+  vehicleVolume: 0.35
+  backgroundMusicVolume: 0.12
+  playBackgroundMusic: 1
 --- !u!1001 &6157629244344384734
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -27982,3 +28015,4 @@ SceneRoots:
   - {fileID: 6157629244344384734}
   - {fileID: 1914106109}
   - {fileID: 2136000002}
+  - {fileID: 2141000002}

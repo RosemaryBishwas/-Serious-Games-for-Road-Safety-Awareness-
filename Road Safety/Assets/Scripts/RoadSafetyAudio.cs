@@ -9,18 +9,26 @@ public class RoadSafetyAudio : MonoBehaviour
     private static AudioClip generatedCollisionClip;
     private static AudioClip generatedSuccessClip;
     private static AudioClip generatedVehicleLoopClip;
+    private static AudioClip generatedBackgroundMusicClip;
 
     [Header("Optional Custom Clips")]
     public AudioClip hornClip;
     public AudioClip collisionClip;
     public AudioClip successClip;
     public AudioClip vehicleLoopClip;
+    public AudioClip backgroundMusicClip;
 
     [Header("Volumes")]
     [Range(0f, 1f)] public float hornVolume = 0.9f;
     [Range(0f, 1f)] public float collisionVolume = 1f;
     [Range(0f, 1f)] public float successVolume = 0.9f;
     [Range(0f, 1f)] public float vehicleVolume = 0.35f;
+    [Range(0f, 1f)] public float backgroundMusicVolume = 0.12f;
+
+    [Header("Background Music")]
+    public bool playBackgroundMusic = true;
+
+    private AudioSource backgroundMusicSource;
 
     public static RoadSafetyAudio Instance
     {
@@ -80,6 +88,12 @@ public class RoadSafetyAudio : MonoBehaviour
 
         instance = this;
         DontDestroyOnLoad(gameObject);
+        StartBackgroundMusic();
+    }
+
+    private void Start()
+    {
+        StartBackgroundMusic();
     }
 
     private AudioClip GetHornClip()
@@ -140,6 +154,46 @@ public class RoadSafetyAudio : MonoBehaviour
         }
 
         return generatedVehicleLoopClip;
+    }
+
+    private AudioClip GetBackgroundMusicClip()
+    {
+        if (backgroundMusicClip != null)
+        {
+            return backgroundMusicClip;
+        }
+
+        if (generatedBackgroundMusicClip == null)
+        {
+            generatedBackgroundMusicClip = CreateBackgroundMusicClip();
+        }
+
+        return generatedBackgroundMusicClip;
+    }
+
+    private void StartBackgroundMusic()
+    {
+        if (!playBackgroundMusic)
+        {
+            return;
+        }
+
+        if (backgroundMusicSource == null)
+        {
+            backgroundMusicSource = gameObject.AddComponent<AudioSource>();
+            backgroundMusicSource.loop = true;
+            backgroundMusicSource.playOnAwake = false;
+            backgroundMusicSource.spatialBlend = 0f;
+            backgroundMusicSource.ignoreListenerPause = true;
+        }
+
+        backgroundMusicSource.clip = GetBackgroundMusicClip();
+        backgroundMusicSource.volume = backgroundMusicVolume;
+
+        if (!backgroundMusicSource.isPlaying)
+        {
+            backgroundMusicSource.Play();
+        }
     }
 
     private void PlayOneShotAt(Vector3 position, AudioClip clip, float volume)
@@ -239,6 +293,42 @@ public class RoadSafetyAudio : MonoBehaviour
         }
 
         return CreateClip("Generated Vehicle Loop", samples);
+    }
+
+    private static AudioClip CreateBackgroundMusicClip()
+    {
+        float duration = 12f;
+        int sampleCount = Mathf.CeilToInt(SampleRate * duration);
+        float[] samples = new float[sampleCount];
+        uint random = 246813579u;
+
+        for (int i = 0; i < sampleCount; i++)
+        {
+            float time = i / (float)SampleRate;
+            float loopFade = Mathf.Sin(Mathf.PI * time / duration);
+            float windPulse = 0.55f + Mathf.Sin(2f * Mathf.PI * 0.08f * time) * 0.25f;
+
+            random = random * 1664525u + 1013904223u;
+            float softNoise = ((random >> 16) / 32768f) - 1f;
+
+            float wind =
+                softNoise *
+                (0.04f + Mathf.Sin(2f * Mathf.PI * 0.13f * time) * 0.02f) *
+                windPulse;
+
+            float water =
+                Mathf.Sin(2f * Mathf.PI * 176f * time + Mathf.Sin(2f * Mathf.PI * 0.31f * time)) * 0.018f +
+                Mathf.Sin(2f * Mathf.PI * 221f * time + Mathf.Sin(2f * Mathf.PI * 0.23f * time)) * 0.014f;
+
+            float calmTone =
+                Mathf.Sin(2f * Mathf.PI * 196f * time) * 0.025f +
+                Mathf.Sin(2f * Mathf.PI * 293.66f * time) * 0.018f +
+                Mathf.Sin(2f * Mathf.PI * 392f * time) * 0.012f;
+
+            samples[i] = (wind + water + calmTone) * loopFade * 0.65f;
+        }
+
+        return CreateClip("Generated Calm Background Tune", samples);
     }
 
     private static AudioClip CreateClip(string clipName, float[] samples)
